@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TOONBOX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14111f;--bg2:#1f1b33;--ink:#f4efe8;--mute:#a59fba;--pink:#ff5c8a;--line:#332e4f;color-scheme:dark}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 Outfit,system-ui,sans-serif;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+header{position:fixed;inset:0 0 auto;z-index:5;display:flex;align-items:center;gap:14px;padding:12px 4%;background:linear-gradient(var(--bg),transparent)}
+.logo{font:400 24px 'Dela Gothic One',sans-serif;color:var(--pink);letter-spacing:.5px;margin-right:auto}
+#q{width:min(240px,40vw);background:#0006;border:1px solid var(--line);border-radius:6px;padding:7px 12px}
+.btn{border:0;border-radius:6px;padding:9px 18px;font-weight:600;background:var(--ink);color:var(--bg)}
+.btn.pink{background:var(--pink);color:#fff}
+.btn.ghost{background:#ffffff1f;color:var(--ink)}
+.hero{min-height:68vh;display:flex;align-items:flex-end;padding:120px 4% 48px;background-size:cover;background-position:center}
+.hero div{max-width:560px}
+.hero h1{font:400 clamp(30px,6vw,56px)/1.05 'Dela Gothic One',sans-serif;margin-bottom:10px}
+.hero p{color:#e6e0f0;margin-bottom:18px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.empty{padding:140px 4% 60px;max-width:640px}
+.empty h2{font:400 28px 'Dela Gothic One',sans-serif;margin-bottom:10px}
+.empty p,.empty li{color:var(--mute);margin-bottom:6px}
+.row{padding:22px 0 0}
+.row h2{font-weight:600;font-size:19px;padding:0 4%;margin-bottom:10px}
+.track{display:flex;gap:10px;overflow-x:auto;padding:0 4% 10px;scroll-snap-type:x proximity}
+.card{flex:0 0 clamp(170px,22vw,260px);scroll-snap-align:start;background:none;border:0;text-align:left;transition:transform .15s}
+.card:hover{transform:translateY(-4px)}
+.card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;background:var(--bg2)}
+.card span{display:block;margin-top:6px;font-size:14px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+footer{padding:40px 4%;color:var(--mute);font-size:13px}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--bg2);color:var(--ink);padding:0;width:min(900px,94vw);max-height:92vh;overflow:auto}
+dialog::backdrop{background:#000b}
+.pad{padding:20px}
+.close{float:right;background:none;border:0;font-size:26px;line-height:1;padding:6px 12px;color:var(--mute)}
+video{display:block;width:100%;max-height:70vh;background:#000}
+.meta h2{font:400 24px 'Dela Gothic One',sans-serif;margin-bottom:6px}
+.meta p{color:var(--mute);margin-bottom:12px}
+.tag{display:inline-block;background:var(--pink);color:#fff;border-radius:4px;padding:1px 8px;font-size:13px;margin-bottom:8px}
+form{display:grid;gap:12px}
+label{display:grid;gap:4px;font-size:14px;color:var(--mute)}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 12px}
+textarea{min-height:80px;resize:vertical}
+progress{width:100%;height:8px;accent-color:var(--pink)}
+.msg{font-size:14px;min-height:20px}
+.msg.err{color:#ff8a8a}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">TOONBOX</span>
+  <input id="q" type="search" placeholder="Rechercher" aria-label="Rechercher">
+  <button class="btn ghost" id="adminBtn">Admin</button>
+</header>
+<main id="main"></main>
+<footer>Mes créations, rien que pour les potes.</footer>
+
+<dialog id="player">
+  <button class="close" id="closeP" aria-label="Fermer">&times;</button>
+  <video id="vid" controls playsinline></video>
+  <div class="pad meta">
+    <span class="tag" id="pCat"></span>
+    <h2 id="pTitle"></h2>
+    <p id="pDesc"></p>
+    <button class="btn ghost" id="delBtn" hidden>Supprimer du site</button>
+  </div>
+</dialog>
+
+<dialog id="admin">
+  <button class="close" id="closeA" aria-label="Fermer">&times;</button>
+  <div class="pad">
+    <form id="loginForm">
+      <h2 class="logo" style="margin:0">Connexion admin</h2>
+      <label>E-mail<input type="email" id="em" required autocomplete="username"></label>
+      <label>Mot de passe<input type="password" id="pw" required autocomplete="current-password"></label>
+      <button class="btn pink">Se connecter</button>
+      <p class="msg err" id="loginMsg"></p>
+    </form>
+    <form id="upForm" hidden>
+      <h2 class="logo" style="margin:0">Publier une vidéo</h2>
+      <label>Titre<input id="fTitle" required maxlength="80"></label>
+      <label>Description<textarea id="fDesc" maxlength="400"></textarea></label>
+      <label>Catégorie
+        <select id="fCat"><option>Anime</option><option>Manga</option><option>Court-métrage</option><option>Autre</option></select>
+      </label>
+      <label>Vidéo (MP4, 100 Mo max)<input type="file" id="fVid" accept="video/mp4,video/*" required></label>
+      <label>Image de couverture (facultatif)<input type="file" id="fCover" accept="image/*"></label>
+      <progress id="bar" value="0" max="1" hidden></progress>
+      <p class="msg" id="upMsg"></p>
+      <button class="btn pink" id="pubBtn">Publier</button>
+      <button type="button" class="btn ghost" id="outBtn">Se déconnecter</button>
+    </form>
+  </div>
+</dialog>
+
+<script type="module">
+/* ====== À REMPLIR ====== */
+const FIREBASE = { apiKey:"", authDomain:"", projectId:"", appId:"" };
+const CLOUD_NAME = "";      // Cloudinary : nom du cloud
+const UPLOAD_PRESET = "";   // Cloudinary : preset d'envoi "Unsigned"
+/* ======================= */
+const MAX_MB = 100;
+const READY = FIREBASE.projectId && CLOUD_NAME && UPLOAD_PRESET;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let items = [], admin = false, term = "", current = null, db, auth, fb = {};
+
+const img = (v, w, h) => v.thumb.replace("/upload/", `/upload/${v.thumb.includes("/video/") ? "so_2," : ""}c_fill,w_${w},h_${h},q_auto/`);
+
+function card(v){return `<button class="card" data-id="${v.id}"><img loading="lazy" alt="" src="${img(v,480,270)}"><span>${esc(v.title)}</span></button>`}
+function row(t, list){return list.length ? `<section class="row"><h2>${esc(t)}</h2><div class="track">${list.map(card).join("")}</div></section>` : ""}
+
+function render(){
+  const m = $("#main");
+  if(!READY){
+    m.innerHTML = `<div class="empty"><h2>Presque prêt</h2><p>Ouvre ce fichier dans un éditeur et remplis les 3 blocs en haut du script :</p><ul><li>FIREBASE (config de ton projet)</li><li>CLOUD_NAME (Cloudinary)</li><li>UPLOAD_PRESET (Cloudinary, mode Unsigned)</li></ul></div>`;
+    return;
+  }
+  const list = items.filter(v => (v.title + " " + v.cat).toLowerCase().includes(term));
+  if(!items.length){
+    m.innerHTML = `<div class="empty"><h2>Aucune vidéo pour l'instant</h2><p>Clique sur Admin, connecte-toi et publie ta première création.</p></div>`;
+    return;
+  }
+  if(term){
+    m.innerHTML = `<div style="height:80px"></div>` + (row("Résultats", list) || `<div class="empty" style="padding-top:40px"><p>Aucun résultat pour « ${esc(term)} ».</p></div>`);
+    return;
+  }
+  const h = items[0];
+  const cats = [...new Set(items.map(v => v.cat))];
+  m.innerHTML = `<section class="hero" style="background-image:linear-gradient(90deg,#14111f 15%,#14111f55),linear-gradient(0deg,#14111f,transparent 40%),url('${img(h,1600,900)}')"><div><span class="tag">${esc(h.cat)}</span><h1>${esc(h.title)}</h1><p>${esc(h.desc)}</p><button class="btn" data-id="${h.id}">▶ Lecture</button></div></section>`
+    + row("Nouveautés", items.slice(0, 12)) + cats.map(c => row(c, items.filter(v => v.cat === c))).join("");
+}
+
+function openPlayer(id){
+  const v = items.find(x => x.id === id); if(!v) return;
+  current = v;
+  $("#vid").src = v.url; $("#vid").poster = img(v,960,540);
+  $("#pCat").textContent = v.cat; $("#pTitle").textContent = v.title; $("#pDesc").textContent = v.desc || "";
+  $("#delBtn").hidden = !admin;
+  $("#player").showModal(); $("#vid").play().catch(() => {});
+}
+function closePlayer(){ const p = $("#vid"); p.pause(); p.removeAttribute("src"); p.load(); $("#player").close(); }
+
+$("#main").addEventListener("click", e => { const b = e.target.closest("[data-id]"); if(b) openPlayer(b.dataset.id); });
+$("#closeP").onclick = closePlayer;
+$("#player").addEventListener("cancel", () => { $("#vid").pause(); });
+$("#q").oninput = e => { term = e.target.value.trim().toLowerCase(); render(); };
+$("#adminBtn").onclick = () => { if(!READY) return alert("Remplis d'abord la configuration en haut du fichier."); $("#admin").showModal(); };
+$("#closeA").onclick = () => $("#admin").close();
+
+function upload(file, type, onProgress){
+  return new Promise((ok, ko) => {
+    const x = new XMLHttpRequest();
+    x.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${type}/upload`);
+    if(onProgress) x.upload.onprogress = e => e.lengthComputable && onProgress(e.loaded / e.total);
+    x.onload = () => { let r = {}; try{ r = JSON.parse(x.responseText); }catch{} x.status < 300 ? ok(r) : ko(new Error(r.error?.message || "Échec de l'envoi")); };
+    x.onerror = () => ko(new Error("Pas de connexion"));
+    const f = new FormData(); f.append("file", file); f.append("upload_preset", UPLOAD_PRESET);
+    x.send(f);
+  });
+}
+
+if(READY){
+  const base = "https://www.gstatic.com/firebasejs/10.14.1/";
+  const [{initializeApp}, A, F] = await Promise.all([import(base+"firebase-app.js"), import(base+"firebase-auth.js"), import(base+"firebase-firestore.js")]);
+  const app = initializeApp(FIREBASE);
+  auth = A.getAuth(app); db = F.getFirestore(app); fb = {...A, ...F};
+
+  fb.onSnapshot(fb.query(fb.collection(db, "videos"), fb.orderBy("created", "desc")),
+    snap => { items = snap.docs.map(d => ({id: d.id, ...d.data()})); render(); },
+    () => { $("#main").innerHTML = `<div class="empty"><h2>Chargement impossible</h2><p>Vérifie les règles Firestore et ta connexion.</p></div>`; });
+
+  fb.onAuthStateChanged(auth, u => {
+    admin = !!u;
+    $("#loginForm").hidden = admin; $("#upForm").hidden = !admin;
+    $("#adminBtn").textContent = admin ? "Publier" : "Admin";
+    $("#delBtn").hidden = !admin;
+  });
+
+  $("#loginForm").onsubmit = async e => {
+    e.preventDefault(); $("#loginMsg").textContent = "";
+    try{ await fb.signInWithEmailAndPassword(auth, $("#em").value, $("#pw").value); $("#pw").value = ""; }
+    catch{ $("#loginMsg").textContent = "E-mail ou mot de passe incorrect."; }
+  };
+  $("#outBtn").onclick = () => fb.signOut(auth);
+
+  $("#upForm").onsubmit = async e => {
+    e.preventDefault();
+    const msg = $("#upMsg"), bar = $("#bar"), file = $("#fVid").files[0], cover = $("#fCover").files[0];
+    msg.className = "msg";
+    if(!file) return;
+    if(file.size > MAX_MB * 1048576){ msg.className = "msg err"; msg.textContent = `Fichier trop lourd (${(file.size/1048576).toFixed(0)} Mo). Maximum : ${MAX_MB} Mo.`; return; }
+    $("#pubBtn").disabled = true; bar.hidden = false; bar.value = 0; msg.textContent = "Envoi en cours…";
+    try{
+      let thumb;
+      const r = await upload(file, "video", p => { bar.value = p; });
+      if(cover) thumb = (await upload(cover, "image")).secure_url;
+      else thumb = r.secure_url.replace(/\.\w+$/, ".jpg");
+      await fb.addDoc(fb.collection(db, "videos"), {
+        title: $("#fTitle").value.trim(), desc: $("#fDesc").value.trim(), cat: $("#fCat").value,
+        url: r.secure_url, thumb, created: fb.serverTimestamp()
+      });
+      msg.textContent = "Publié !"; e.target.reset(); bar.hidden = true;
+    }catch(err){ msg.className = "msg err"; msg.textContent = err.message; }
+    $("#pubBtn").disabled = false;
+  };
+
+  $("#delBtn").onclick = async () => {
+    if(!current || !confirm(`Supprimer « ${current.title} » du site ?`)) return;
+    await fb.deleteDoc(fb.doc(db, "videos", current.id)); closePlayer();
+  };
+}
+render();
+</script>
+</body>
+</html>
